@@ -17,24 +17,25 @@ import com.aprendendo.login.repository.RoleRepository;
 import com.aprendendo.login.repository.UserRepository;
 
 @Service
-public class AuthService implements UserDetailsService{
-    
-    private final  UserRepository userRepository;
-    private final  BCryptPasswordEncoder passwordEncoder;
+public class AuthService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
 
-    public AuthService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, RoleRepository roleRepository){
+    public AuthService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder,
+            RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
     }
 
-    public void registerPublico(AuthDto dto){
+    public User registerPublico(AuthDto dto) {
 
         Role roleDefault = roleRepository.findByName(Role.Values.ROLE_BASIC.name())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role BASICA não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role BASICA não encontrada"));
 
-        if(userRepository.findByUsername(dto.username()) != null){
+        if (userRepository.findByUsername(dto.username()) != null) {
             throw new IllegalArgumentException("Username já foi cadastrado");
         }
 
@@ -44,23 +45,30 @@ public class AuthService implements UserDetailsService{
         user.setRoles(Set.of(roleDefault));
 
         userRepository.save(user);
+        return user;
     }
 
-    public void registerPrivate(AuthDto dto){
-        
-        /*Set<Role> roles = dto.roleNames().stream().map(name -> roleRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Role não encontrada: " + name)))
-            .collect(Collectors.toSet());*/
+    public void registerPrivate(AuthDto dto) {
+
+        /*
+         * Set<Role> roles = dto.roleNames().stream().map(name ->
+         * roleRepository.findByName(name)
+         * .orElseThrow(() -> new IllegalArgumentException("Role não encontrada: " +
+         * name)))
+         * .collect(Collectors.toSet());
+         */
 
         Role roleAdmin;
         Role roleBasic;
 
-        roleAdmin = roleRepository.findByName(Role.Values.ROLE_ADMIN.name()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role ADMIN não encontrada"));
+        roleAdmin = roleRepository.findByName(Role.Values.ROLE_ADMIN.name())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role ADMIN não encontrada"));
 
-        roleBasic = roleRepository.findByName(Role.Values.ROLE_BASIC.name()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role BASIC não encontrada"));
+        roleBasic = roleRepository.findByName(Role.Values.ROLE_BASIC.name())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role BASIC não encontrada"));
 
         Set<Role> roles = Set.of(roleAdmin, roleBasic);
-    
+
         var passwordHash = passwordEncoder.encode(dto.password());
 
         User user = new User();
@@ -73,14 +81,14 @@ public class AuthService implements UserDetailsService{
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username);
-    }
 
-    public void deleteUser(Long id) {
-        if(!userRepository.existsById(id)){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            throw new UsernameNotFoundException("Usuário não encontrado: " + username);
         }
 
-        userRepository.deleteById(id);
+        return user;
     }
+
 }

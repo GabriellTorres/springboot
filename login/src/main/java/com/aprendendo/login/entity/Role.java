@@ -54,5 +54,10 @@ public class Role {
         public Long getRoleId(){
             return id;
         }
+
+        Role toRole() {
+            // TODO Auto-generated method stub
+            throw new UnsupportedOperationException("Unimplemented method 'toRole'");
+        }
     }
 }
