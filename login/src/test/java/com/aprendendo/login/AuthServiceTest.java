@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -73,6 +74,36 @@ public class AuthServiceTest {
             assertEquals(1,user.getRoles().size());
             verify(userRepository, times(1)).save(any(User.class));
             
+        }
+
+        @Test
+        public void deveregistrarAdminComSucesso(){
+            AuthDto dto = new AuthDto("adminuser", "adminpassword");
+            String senhaHash = "$2a$10$hashFalsoParaTeste";
+            String role1 = Role.Values.ROLE_ADMIN.name();
+            String role2 = Role.Values.ROLE_BASIC.name();
+
+            Role roleAdmin = new Role();
+            roleAdmin.setName(role1);
+            roleAdmin.setId(1L);
+
+            Role roleBasic = new Role();
+            roleBasic.setName(role2);
+            roleBasic.setId(2L);
+
+            when(roleRepository.findByName(role1)).thenReturn(Optional.of(roleAdmin));
+            when(roleRepository.findByName(role2)).thenReturn(Optional.of(roleBasic));
+            when(passwordEncoder.encode(dto.password())).thenReturn(senhaHash);
+
+            User user = authService.registerPrivate(dto);
+
+            assertNotNull(user);
+            assertEquals("adminuser", user.getUsername());
+            assertEquals(senhaHash, user.getPassword());
+            assertEquals(2, user.getRoles().size());
+            verify(userRepository, times(1)).save(any(User.class));
+
+
         }
 
         @Test

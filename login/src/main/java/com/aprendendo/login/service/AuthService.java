@@ -48,7 +48,7 @@ public class AuthService implements UserDetailsService {
         return user;
     }
 
-    public void registerPrivate(AuthDto dto) {
+    public User registerPrivate(AuthDto dto) {
 
         /*
          * Set<Role> roles = dto.roleNames().stream().map(name ->
@@ -77,6 +77,7 @@ public class AuthService implements UserDetailsService {
         user.setRoles(roles);
 
         userRepository.save(user);
+        return user;
     }
 
     @Override
